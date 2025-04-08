@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace FI.WebAtividadeEntrevista.Models.Validations
 {
-    public class CPFValidator : ValidationAttribute
+    public class CpfValidator : ValidationAttribute
     {
         public override bool IsValid(object value)
         {
