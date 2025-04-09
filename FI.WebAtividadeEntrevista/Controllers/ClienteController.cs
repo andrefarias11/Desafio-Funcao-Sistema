@@ -99,6 +99,7 @@ namespace WebAtividadeEntrevista.Controllers
         public JsonResult Alterar(ClienteModel model)
         {
             BoCliente bo = new BoCliente();
+            BoBeneficiario boBeneficiario = new BoBeneficiario();
 
             List<string> erros = new List<string>();
 
@@ -133,6 +134,30 @@ namespace WebAtividadeEntrevista.Controllers
                     Telefone = model.Telefone,
                     Cpf = model.Cpf
                 });
+
+                if (model.Beneficiarios != null)
+                {
+                    foreach (BeneficiarioModel beneficiario in model.Beneficiarios)
+                    {
+                        if (CpfValidator.IsValidCpf(beneficiario.CPF))
+                        {
+                            boBeneficiario.Incluir(new Beneficiario()
+                            {
+                                CPF = beneficiario.CPF,
+                                Nome = beneficiario.Nome,
+                                ClienteId = model.Id
+                            });
+                        }
+                        else
+                            erros.Add($"CPF {beneficiario.CPF} do cliente {beneficiario.Nome} é inválido.");
+                    }
+
+                    if (erros.Count > 0)
+                    {
+                        erros.Add("Cadastro parcialmente realizado.");
+                        return Json(string.Join(Environment.NewLine, erros));
+                    }
+                }
 
                 return Json("Cadastro alterado com sucesso");
             }

@@ -1,24 +1,28 @@
 ﻿$(document).ready(function () {
     var beneficiarios = [];
 
+    // Máscaras
     $('#formCadastro #CPF').mask('000.000.000-00');
     $('#modalBeneficiarios').on('shown.bs.modal', function () {
         $('#beneficiarioCPF').mask('000.000.000-00');
     });
 
+    // Atualiza a tabela de beneficiários
     function atualizarTabelaBeneficiarios() {
         var tabela = $("#tabelaBeneficiarios tbody");
         tabela.empty();
 
         beneficiarios.forEach(function (beneficiario, index) {
-            tabela.append('<tr>' +
-                '<td>' + beneficiario.cpf + '</td>' +
-                '<td>' + beneficiario.nome + '</td>' +
-                '<td>' +
-                '<button type="button" class="btn btn-primary btn-sm" onclick="alterarBeneficiario(' + index + ')">Alterar</button> ' +
-                '<button type="button" class="btn btn-primary btn-sm" onclick="excluirBeneficiario(' + index + ')">Excluir</button>' +
-                '</td>' +
-                '</tr>');
+            tabela.append(`
+                <tr>
+                    <td>${beneficiario.cpf}</td>
+                    <td>${beneficiario.nome}</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="alterarBeneficiario(${index})">Alterar</button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="excluirBeneficiario(${index})">Excluir</button>
+                    </td>
+                </tr>
+            `);
         });
     }
 
@@ -27,6 +31,7 @@
         return regex.test(cpf);
     }
 
+    // Adiciona beneficiário
     $("#adicionarBeneficiario").click(function () {
         var nome = $("#beneficiarioNome").val().trim();
         var cpf = $("#beneficiarioCPF").val().trim();
@@ -36,7 +41,7 @@
             return;
         }
 
-        if (beneficiarios.some(function (b) { return b.cpf === cpf; })) {
+        if (beneficiarios.some(b => b.cpf === cpf)) {
             ModalDialog("CPF Duplicado", "Já existe um beneficiário com esse CPF.");
             return;
         }
@@ -48,14 +53,20 @@
         $("#beneficiarioCPF").val('');
     });
 
-    document.getElementById("SalvarId").addEventListener("click", function () {
-        var IdNumber = $("#CPF").val();
+    // Botão Salvar
+    $("#SalvarId").on("click", function (e) {
+        e.preventDefault();
+
+        // Garante um ID válido (pode ser vazio ou zero se for novo)
+        const id = $("#Id").val() || 0;
+
         fetch('/Cliente/Incluir', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
+                Id: id,
                 CEP: $("#CEP").val(),
                 Cidade: $("#Cidade").val(),
                 Email: $("#Email").val(),
@@ -69,68 +80,26 @@
                 Beneficiarios: beneficiarios
             })
         })
-            .then(function (response) {
-                if (!response.ok) {
-                    throw new Error("Erro ao adicionar cliente!");
-                }
-                return response.text(); // Mudado de JSON para texto
+            .then(response => {
+                if (!response.ok) throw new Error("Erro ao adicionar cliente!");
+                return response.text();
             })
-            .then(function (text) {
-                var mensagens = text.split('\n');
-
-                mensagens.forEach(function (mensagem, index) {
-                    setTimeout(function () {
-                        ModalDialog("Aviso", mensagem);
-                    }, index * 500);
+            .then(text => {
+                var mensagens = text.split('\n').filter(m => m.trim() !== '');
+                mensagens.forEach((mensagem, i) => {
+                    setTimeout(() => ModalDialog("Aviso", mensagem), i * 500);
                 });
 
-                setTimeout(function () {
-                    location.reload();
-                }, mensagens.length * 500 + 1000);
+                setTimeout(() => location.reload(), mensagens.length * 500 + 1000);
             })
-            .catch(function (error) {
-                ModalDialog("Erro", error.message || "Erro ao adicionar cliente!");
-            });
+            .catch(error => ModalDialog("Erro", error.message || "Erro ao adicionar cliente!"));
     });
 
-    function adicionarBeneficiarioBD(CPF) {
-        var requests = beneficiarios.map(function (beneficiario) {
-            var IdFormated = beneficiario.cpf.replace(/\./g, "").replace("-", "");
-            return fetch('/Beneficiario/Incluir', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    clienteCPF: CPF,
-                    Id: IdFormated,
-                    Nome: beneficiario.nome,
-                    CPF: beneficiario.cpf
-                })
-            });
-        });
-
-        Promise.all(requests)
-            .then(function (responses) {
-                var erro = responses.some(function (r) { return !r.ok; });
-                if (erro) {
-                    throw new Error("Erro ao adicionar Beneficiário!");
-                }
-
-                ModalDialog("Sucesso!", "Cliente e beneficiários adicionados com sucesso.");
-                setTimeout(function () {
-                    location.reload();
-                }, 2000);
-            })
-            .catch(function (error) {
-                console.log("Erro: ", error);
-            });
-    }
-
+    // Alterar e excluir beneficiário
     window.alterarBeneficiario = function (index) {
-        var beneficiario = beneficiarios[index];
-        $("#beneficiarioNome").val(beneficiario.nome);
-        $("#beneficiarioCPF").val(beneficiario.cpf);
+        const b = beneficiarios[index];
+        $("#beneficiarioNome").val(b.nome);
+        $("#beneficiarioCPF").val(b.cpf);
         excluirBeneficiario(index);
     };
 
@@ -140,25 +109,35 @@
     };
 });
 
+// Função de modal dinâmica
 function ModalDialog(titulo, texto) {
-    var random = Math.random().toString().replace('.', '');
-    var dialogHtml = '<div id="' + random + '" class="modal fade">' +
-        '<div class="modal-dialog">' +
-        '<div class="modal-content">' +
-        '<div class="modal-header">' +
-        '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>' +
-        '<h4 class="modal-title">' + titulo + '</h4>' +
-        '</div>' +
-        '<div class="modal-body">' +
-        '<p>' + texto + '</p>' +
-        '</div>' +
-        '<div class="modal-footer">' +
-        '<button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
+    const randomId = "modal" + Math.random().toString().replace('.', '');
+    const dialogHtml = `
+        <div id="${randomId}" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">${titulo}</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>${texto}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 
     $('body').append(dialogHtml);
-    $('#' + random).modal('show');
+    $('#' + randomId).modal('show');
+
+    // Remove o modal da DOM após fechar
+    $('#' + randomId).on('hidden.bs.modal', function () {
+        $(this).remove();
+    });
 }
