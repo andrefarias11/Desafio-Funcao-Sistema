@@ -145,7 +145,6 @@ namespace FI.AtividadeEntrevista.DAL
 
             if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
             {
-                // Agrupar por cliente
                 var grupos = ds.Tables[0].AsEnumerable()
                     .GroupBy(row => row.Field<long>("Id"));
 

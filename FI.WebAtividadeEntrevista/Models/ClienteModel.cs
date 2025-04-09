@@ -5,6 +5,7 @@ using System.Linq;
 using System.Web;
 using FI.WebAtividadeEntrevista.Models;
 using FI.WebAtividadeEntrevista.Models.Validations;
+using FI.WebAtividadeEntrevista.Resources;
 
 namespace WebAtividadeEntrevista.Models
 {
@@ -30,7 +31,7 @@ namespace WebAtividadeEntrevista.Models
         /// <summary>
         /// E-mail
         /// </summary>
-        [RegularExpression(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$", ErrorMessage = "Digite um e-mail válido")]
+        [RegularExpression(@"^([\w\.\-]+)@([\w\-]+)((\.(\w){2,3})+)$", ErrorMessageResourceType = typeof(Mensagens), ErrorMessageResourceName = "Erro_Email_Formato")]
         public string Email { get; set; }
 
         /// <summary>

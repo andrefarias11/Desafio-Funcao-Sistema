@@ -32,6 +32,5 @@ BEGIN
         @iniciarEm = @iniciarEm, 
         @quantidade = @quantidade;
 
-    -- Essa parte fica como está, para retornar o total de registros:
     SELECT * FROM CLIENTES WITH(NOLOCK);
 END

@@ -1,5 +1,5 @@
-﻿using FI.AtividadeEntrevista.DML;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using FI.WebAtividadeEntrevista.Resources;
 
 namespace FI.WebAtividadeEntrevista.Models
 {
@@ -14,7 +14,7 @@ namespace FI.WebAtividadeEntrevista.Models
         /// CPF do Beneficiário
         /// </summary>
         [Required]
-        [RegularExpression(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$", ErrorMessage = "Digite um CPF válido no formato XXX.XXX.XXX-XX")]
+        [RegularExpression(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$", ErrorMessageResourceType = typeof(Mensagens), ErrorMessageResourceName = "Erro_CPF_Formato")]
         public string CPF { get; set; }
 
         /// <summary>
