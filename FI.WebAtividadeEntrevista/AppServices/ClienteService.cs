@@ -31,6 +31,40 @@ namespace WebAtividadeEntrevista.AppServices
                 return resultado;
             }
 
+            var beneficiariosValidos = new List<Beneficiario>();
+            var cpfsValidos = new HashSet<string>();
+
+            if (model.Beneficiarios != null && model.Beneficiarios.Any())
+            {
+                foreach (var beneficiario in model.Beneficiarios)
+                {
+                    if (!CpfValidator.IsValidCpf(beneficiario.CPF))
+                    {
+                        resultado.Erros.Add(string.Format(Mensagens.Erro_CPF_Beneficiario, beneficiario.CPF, beneficiario.Nome));
+                        continue;
+                    }
+
+                    if (!cpfsValidos.Add(beneficiario.CPF))
+                    {
+                        resultado.Erros.Add($"CPF duplicado: {beneficiario.CPF} para o beneficiário {beneficiario.Nome}");
+                        continue;
+                    }
+
+                    beneficiariosValidos.Add(new Beneficiario
+                    {
+                        CPF = beneficiario.CPF,
+                        Nome = beneficiario.Nome
+                    });
+                }
+
+                if (resultado.Erros.Any())
+                {
+                    resultado.Erros.Add(Mensagens.Erro_Cadastro_Parcial);
+                    resultado.Sucesso = false;
+                    return resultado;
+                }
+            }
+
             var cliente = new Cliente
             {
                 CEP = model.CEP,
@@ -47,30 +81,13 @@ namespace WebAtividadeEntrevista.AppServices
 
             model.Id = _boCliente.Incluir(cliente);
 
-            if (model.Beneficiarios != null)
+            foreach (var beneficiario in beneficiariosValidos)
             {
-                foreach (var beneficiario in model.Beneficiarios)
-                {
-                    if (CpfValidator.IsValidCpf(beneficiario.CPF))
-                    {
-                        _boBeneficiario.Incluir(new Beneficiario
-                        {
-                            CPF = beneficiario.CPF,
-                            Nome = beneficiario.Nome,
-                            ClienteId = model.Id
-                        });
-                    }
-                    else
-                    {
-                        resultado.Erros.Add(string.Format(Mensagens.Erro_CPF_Beneficiario, beneficiario.CPF, beneficiario.Nome));
-                    }
-                }
-
-                if (resultado.Erros.Count > 0)
-                    resultado.Erros.Add(Mensagens.Erro_Cadastro_Parcial);
+                beneficiario.ClienteId = model.Id;
+                _boBeneficiario.Incluir(beneficiario);
             }
 
-            resultado.Sucesso = resultado.Erros.Count == 0;
+            resultado.Sucesso = true;
             return resultado;
         }
 
@@ -147,7 +164,12 @@ namespace WebAtividadeEntrevista.AppServices
                 Nome = cliente.Nome,
                 Sobrenome = cliente.Sobrenome,
                 Telefone = cliente.Telefone,
-                Cpf = cliente.Cpf
+                Cpf = cliente.Cpf,
+                Beneficiarios = cliente.Beneficiarios?.Select(b => new BeneficiarioModel
+                {
+                    CPF = b.CPF,
+                    Nome = b.Nome
+                }).ToList()
             };
         }
 

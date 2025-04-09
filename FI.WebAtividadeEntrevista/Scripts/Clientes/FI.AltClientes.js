@@ -14,6 +14,8 @@
         $('#formCadastro #Telefone').val(obj.Telefone);
         $('#formCadastro #CPF').val(formatarCpf(obj.CPF));
 
+        console.log(obj);
+
         if (obj.Beneficiarios && obj.Beneficiarios.length > 0) {
             beneficiarios = obj.Beneficiarios.map(b => ({
                 cpf: formatarCpf(b.CPF),
