@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Web;
+using FI.WebAtividadeEntrevista.Models;
 using FI.WebAtividadeEntrevista.Models.Validations;
 
 namespace WebAtividadeEntrevista.Models
@@ -71,9 +72,14 @@ namespace WebAtividadeEntrevista.Models
         /// <summary>
         /// Cpf
         /// </summary>
-        [RegularExpression(@"^\d{3}\.\d{3}\.\d{3}-\d{2}$", ErrorMessage = "CPF no formato válido")]
-        [CpfValidator(ErrorMessage = "CPF inválido")]
+        [Required]
+        [CpfValidator]
         public string Cpf { get; set; }
+
+        /// <summary>
+        /// Lista de beneficiários
+        /// </summary>
+        public List<BeneficiarioModel> Beneficiarios { get; set; }
 
     }    
 }

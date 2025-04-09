@@ -1,11 +1,12 @@
-﻿using FI.AtividadeEntrevista.BLL;
-using WebAtividadeEntrevista.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
+using FI.AtividadeEntrevista.BLL;
 using FI.AtividadeEntrevista.DML;
+using FI.WebAtividadeEntrevista.Models;
+using FI.WebAtividadeEntrevista.Models.Validations;
+using WebAtividadeEntrevista.Models;
 
 namespace WebAtividadeEntrevista.Controllers
 {
@@ -16,7 +17,6 @@ namespace WebAtividadeEntrevista.Controllers
             return View();
         }
 
-
         public ActionResult Incluir()
         {
             return View();
@@ -25,42 +25,73 @@ namespace WebAtividadeEntrevista.Controllers
         [HttpPost]
         public JsonResult Incluir(ClienteModel model)
         {
-            BoCliente bo = new BoCliente();
-            
+            BoCliente boClient = new BoCliente();
+            BoBeneficiario boBeneficiario = new BoBeneficiario();
+
+            List<string> erros = new List<string>();
+
+            if (!CpfValidator.IsValidCpf(model.Cpf))
+            {
+                Response.StatusCode = 400;
+                return Json("CPF inválido. Por favor, verifique os dados e tente novamente.");
+            }
+
             if (!this.ModelState.IsValid)
             {
-                List<string> erros = (from item in ModelState.Values
+                erros = (from item in ModelState.Values
                                       from error in item.Errors
                                       select error.ErrorMessage).ToList();
 
                 Response.StatusCode = 400;
-                return Json(string.Join("<br>", erros));
+                return Json(string.Join(Environment.NewLine, erros));
             }
             else
             {
-                if (bo.VerificarExistencia(model.Cpf))
+                if (boClient.VerificarExistencia(model.Cpf))
                 {
                     Response.StatusCode = 400;
-                    return Json("Já existe um cliente cadastrado com esse CPF");
-                }
-                else
-                {
-                    model.Id = bo.Incluir(new Cliente()
-                    {
-                        CEP = model.CEP,
-                        Cidade = model.Cidade,
-                        Email = model.Email,
-                        Estado = model.Estado,
-                        Logradouro = model.Logradouro,
-                        Nacionalidade = model.Nacionalidade,
-                        Nome = model.Nome,
-                        Sobrenome = model.Sobrenome,
-                        Telefone = model.Telefone,
-                        Cpf = model.Cpf
-                    });
+                    return Json("O CPF informado já pertence a um cliente. Insira um CPF válido");
                 }
 
-                return Json("Cadastro efetuado com sucesso");
+                model.Id = boClient.Incluir(new Cliente
+                {
+                    CEP = model.CEP,
+                    Cidade = model.Cidade,
+                    Email = model.Email,
+                    Estado = model.Estado,
+                    Logradouro = model.Logradouro,
+                    Nacionalidade = model.Nacionalidade,
+                    Nome = model.Nome,
+                    Sobrenome = model.Sobrenome,
+                    Telefone = model.Telefone,
+                    Cpf = model.Cpf
+                });
+
+                if (model.Beneficiarios != null)
+                {
+                    foreach (BeneficiarioModel beneficiario in model.Beneficiarios)
+                    {
+                        if (CpfValidator.IsValidCpf(beneficiario.CPF))
+                        {
+                            boBeneficiario.Incluir(new Beneficiario()
+                            {
+                                CPF = beneficiario.CPF,
+                                Nome = beneficiario.Nome,
+                                ClienteId = model.Id
+                            });
+                        }
+                        else
+                            erros.Add($"CPF {beneficiario.CPF} do cliente {beneficiario.Nome} é inválido.");
+                    }
+
+                    if (erros.Count > 0)
+                    {
+                        erros.Add("Cadastro parcialmente realizado.");
+                        return Json(string.Join(Environment.NewLine, erros));
+                    }
+                }
+
+                return Json("Cadastro realizado.");
             }
         }
 
@@ -68,26 +99,27 @@ namespace WebAtividadeEntrevista.Controllers
         public JsonResult Alterar(ClienteModel model)
         {
             BoCliente bo = new BoCliente();
-       
+
+            List<string> erros = new List<string>();
+
+            if (!CpfValidator.IsValidCpf(model.Cpf))
+            {
+                Response.StatusCode = 400;
+                return Json("CPF inválido. Por favor, verifique os dados e tente novamente.");
+            }
+
             if (!this.ModelState.IsValid)
             {
-                List<string> erros = (from item in ModelState.Values
+                erros = (from item in ModelState.Values
                                       from error in item.Errors
                                       select error.ErrorMessage).ToList();
 
                 Response.StatusCode = 400;
-                return Json(string.Join("<br>", erros));
-            }
-
-
-            if(bo.VerificarExistencia(model.Cpf))
-            {
-                Response.StatusCode = 400;
-                return Json("Já existe um cliente cadastrado com esse CPF");
+                return Json(string.Join(Environment.NewLine, erros));
             }
             else
             {
-                bo.Alterar(new Cliente()
+                bo.Alterar(new Cliente
                 {
                     Id = model.Id,
                     CEP = model.CEP,
@@ -101,7 +133,7 @@ namespace WebAtividadeEntrevista.Controllers
                     Telefone = model.Telefone,
                     Cpf = model.Cpf
                 });
-                               
+
                 return Json("Cadastro alterado com sucesso");
             }
         }
@@ -111,11 +143,11 @@ namespace WebAtividadeEntrevista.Controllers
         {
             BoCliente bo = new BoCliente();
             Cliente cliente = bo.Consultar(id);
-            Models.ClienteModel model = null;
+            ClienteModel model = null;
 
             if (cliente != null)
             {
-                model = new ClienteModel()
+                model = new ClienteModel
                 {
                     Id = cliente.Id,
                     CEP = cliente.CEP,
@@ -129,7 +161,6 @@ namespace WebAtividadeEntrevista.Controllers
                     Telefone = cliente.Telefone,
                     Cpf = cliente.Cpf
                 };
-
             }
 
             return View(model);
@@ -153,7 +184,6 @@ namespace WebAtividadeEntrevista.Controllers
 
                 List<Cliente> clientes = new BoCliente().Pesquisa(jtStartIndex, jtPageSize, campo, crescente.Equals("ASC", StringComparison.InvariantCultureIgnoreCase), out qtd);
 
-                //Return result to jTable
                 return Json(new { Result = "OK", Records = clientes, TotalRecordCount = qtd });
             }
             catch (Exception ex)

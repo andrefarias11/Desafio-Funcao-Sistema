@@ -1,4 +1,6 @@
-﻿using FI.AtividadeEntrevista.DML;
+﻿using FI.AtividadeEntrevista.BLL;
+using FI.AtividadeEntrevista.DML;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -118,7 +120,7 @@ namespace FI.AtividadeEntrevista.DAL
             parametros.Add(new System.Data.SqlClient.SqlParameter("Email", cliente.Email));
             parametros.Add(new System.Data.SqlClient.SqlParameter("Telefone", cliente.Telefone));
             parametros.Add(new System.Data.SqlClient.SqlParameter("ID", cliente.Id));
-            parametros.Add(new System.Data.SqlClient.SqlParameter("CPF", cliente.Cpf));
+            parametros.Add(new System.Data.SqlClient.SqlParameter("Cpf", cliente.Cpf));
 
             base.Executar("FI_SP_AltCliente", parametros);
         }
@@ -140,22 +142,47 @@ namespace FI.AtividadeEntrevista.DAL
         private List<DML.Cliente> Converter(DataSet ds)
         {
             List<DML.Cliente> lista = new List<DML.Cliente>();
-            if (ds != null && ds.Tables != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+
+            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
             {
-                foreach (DataRow row in ds.Tables[0].Rows)
+                // Agrupar por cliente
+                var grupos = ds.Tables[0].AsEnumerable()
+                    .GroupBy(row => row.Field<long>("Id"));
+
+                foreach (var grupo in grupos)
                 {
-                    DML.Cliente cli = new DML.Cliente();
-                    cli.Id = row.Field<long>("Id");
-                    cli.CEP = row.Field<string>("CEP");
-                    cli.Cidade = row.Field<string>("Cidade");
-                    cli.Email = row.Field<string>("Email");
-                    cli.Estado = row.Field<string>("Estado");
-                    cli.Logradouro = row.Field<string>("Logradouro");
-                    cli.Nacionalidade = row.Field<string>("Nacionalidade");
-                    cli.Nome = row.Field<string>("Nome");
-                    cli.Sobrenome = row.Field<string>("Sobrenome");
-                    cli.Telefone = row.Field<string>("Telefone");
-                    cli.Cpf = row.Field<string>("CPF");
+                    var row = grupo.First();
+
+                    DML.Cliente cli = new DML.Cliente
+                    {
+                        Id = row.Field<long>("Id"),
+                        CEP = row.Field<string>("CEP"),
+                        Cidade = row.Field<string>("Cidade"),
+                        Email = row.Field<string>("Email"),
+                        Estado = row.Field<string>("Estado"),
+                        Logradouro = row.Field<string>("Logradouro"),
+                        Nacionalidade = row.Field<string>("Nacionalidade"),
+                        Nome = row.Field<string>("Nome"),
+                        Sobrenome = row.Field<string>("Sobrenome"),
+                        Telefone = row.Field<string>("Telefone"),
+                        Cpf = row.Field<string>("Cpf"),
+                        Beneficiarios = new List<DML.Beneficiario>()
+                    };
+
+                    foreach (var rowBeneficiario in grupo)
+                    {
+                        if (row.Table.Columns.Contains("B_ID") && row["B_ID"] != DBNull.Value)
+                        {
+                            cli.Beneficiarios.Add(new Beneficiario
+                            {
+                                Id = rowBeneficiario.Field<long>("B_ID"),
+                                ClienteId = rowBeneficiario.Field<long>("Id"),
+                                CPF = rowBeneficiario.Field<string>("B_CPF"),
+                                Nome = rowBeneficiario.Field<string>("B_NOME")
+                            });
+                        }
+                    }
+
                     lista.Add(cli);
                 }
             }

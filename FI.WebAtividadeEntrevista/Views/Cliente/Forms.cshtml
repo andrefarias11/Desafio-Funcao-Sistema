@@ -1,5 +1,6 @@
-﻿
+﻿﻿
 <form id="formCadastro" method="post">
+    <input type="hidden" id="Id" name="Id" />
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
@@ -18,7 +19,7 @@
         <div class="col-md-6">
             <div class="form-group">
                 <label for="CPF">CPF:</label>
-                <input required="required" type="text" class="form-control" id="CPF" name="CPF" placeholder="Ex.: 898.717.513-89" maxlength="14">
+                <input required="required" type="text" class="form-control" id="CPF" name="CPF" placeholder="Ex.: 010.011.111-00" maxlength="50">
             </div>
         </div>
         <div class="col-md-6">
@@ -27,7 +28,6 @@
                 <input required="required" type="text" class="form-control" id="Nacionalidade" name="Nacionalidade" placeholder="Ex.: brasileira" maxlength="50">
             </div>
         </div>
-
     </div>
     <div class="row">
         <div class="col-md-4">
@@ -41,7 +41,6 @@
                 <label for="Estado">Estado:</label>
                 <select required="required" id="Estado" class="form-control" name="Estado">
                     <option value="">Selecione</option>
-                    <option value="CE">Ceara</option>
                     <option value="SP">São Paulo</option>
                     <option value="PE">Pernambuco</option>
                 </select>
@@ -82,11 +81,70 @@
     <div class="row">
         <div class="col-lg-12">
             <div class="pull-right">
-                <button type="submit" class="btn btn-sm btn-success">Salvar</button>
-                @Html.ActionLink("Voltar", "Index", "Cliente", new { }, new { @class = "btn btn-sm btn-danger" })
+                <button type="submit" class="btn btn-sm btn-success" id="SalvarId">Salvar</button>
+                <button type="button" class="btn btn-sm btn-success" onclick="window.location.href='/Cliente'" style="background-color: red; border: 1px solid red">Voltar</button>
             </div>
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="pull-left">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalBeneficiarios">
+                    Beneficiários
+                </button>
+            </div>
+        </div>
+    </div>
 
+    <div id="modalBeneficiarios" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modalBeneficiariosLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="row w-100">
+                        <div class="col-md-10">
+                            <h4 class="modal-title" id="modalBeneficiariosLabel">Beneficiários</h4>
+                        </div>
+                        <div class="col-md-2 text-right">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <form id="formBeneficiario">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="beneficiarioCPF">CPF:</label>
+                                <input type="text" class="form-control" id="beneficiarioCPF" placeholder="Ex.: 010.011.111-00" maxlength="14">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="beneficiarioNome">Nome:</label>
+                                <input type="text" class="form-control" id="beneficiarioNome" placeholder="Ex.: Andre" maxlength="50">
+                            </div>
+                            <div class="col-md-2 align-self-end">
+                                <label>&nbsp;</label>
+                                <button type="button" class="btn btn-success text-white w-100" id="adicionarBeneficiario">Incluir</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <table class="table" id="tabelaBeneficiarios">
+                        <thead>
+                            <tr>
+                                <th>CPF</th>
+                                <th>Nome</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </form>

@@ -7,12 +7,9 @@ namespace FI.WebAtividadeEntrevista.Models.Validations
 {
     public class CpfValidator : ValidationAttribute
     {
-        public override bool IsValid(object value)
+        public static bool IsValidCpf(string cpf)
         {
-            if (value == null)
-                return false;
-
-            var cpf = Regex.Replace(value.ToString(), "[^0-9]", "");
+            cpf = Regex.Replace(cpf ?? "", "[^0-9]", "");
 
             if (cpf.Length != 11 || cpf.Distinct().Count() == 1)
                 return false;
@@ -24,6 +21,11 @@ namespace FI.WebAtividadeEntrevista.Models.Validations
             var secondDigit = CalculateCpfDigit(cpfBase + firstDigit, new int[] { 11, 10, 9, 8, 7, 6, 5, 4, 3, 2 });
 
             return cpfDigit == $"{firstDigit}{secondDigit}";
+        }
+
+        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+        {
+            return IsValidCpf(value?.ToString()) ? ValidationResult.Success : new ValidationResult("CPF inválido.");
         }
 
         private static int CalculateCpfDigit(string cpf, int[] weights)

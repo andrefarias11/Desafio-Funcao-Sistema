@@ -52,6 +52,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -123,6 +124,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\BeneficiarioModel.cs" />
     <Compile Include="Models\ClienteModel.cs" />
     <Compile Include="Models\Validations\CpfValidator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

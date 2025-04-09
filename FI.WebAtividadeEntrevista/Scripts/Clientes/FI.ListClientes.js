@@ -20,6 +20,10 @@ $(document).ready(function () {
                     title: 'Email',
                     width: '35%'
                 },
+                Cpf: {
+                    title: 'CPF',
+                    width: '20%'
+                },
                 Alterar: {
                     title: '',
                     display: function (data) {
